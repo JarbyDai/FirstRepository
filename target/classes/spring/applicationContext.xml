@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/aop
+            http://www.springframework.org/schema/aop/spring-aop.xsd
+            http://www.springframework.org/schema/tx
+            http://www.springframework.org/schema/tx/spring-tx.xsd
+           ">
+
+    <!-- 使用 annotation -->
+    <context:annotation-config/>
+    <!-- 使用 annotation 自动注册bean,并检查@Controller, @Service, @Repository注解已被注入 -->
+    <context:component-scan base-package="com.jarby.bms.*" />
+    <!-- 定义 Autowired  自动注入 bean -->
+    <bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>
+        <!-- 引入配置文件 -->
+        <bean id="propertyConfigurer"
+              class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+            <property name="location" value="classpath:jdbc.properties" />
+        </bean>
+    <!-- 数据库配置 -->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+          destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driver}" />
+        <property name="url" value="${jdbc.url}" />
+        <property name="username" value="${jdbc.username}" />
+        <property name="password" value="${jdbc.password}" />
+        <!-- 初始化连接大小 -->
+        <property name="initialSize" value="${jdbc.initialSize}"></property>
+        <!-- 连接池最大数量 -->
+        <property name="maxActive" value="${jdbc.maxActive}"></property>
+        <!-- 获取连接最大等待时间 -->
+        <property name="maxWait" value="${jdbc.maxWait}"></property>
+    </bean>
+
+    <!-- sessionFactory -->
+ <!--   <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean" lazy-init="false">
+        &lt;!&ndash; 注入datasource，给sessionfactoryBean内setdatasource提供数据源 &ndash;&gt;
+        <property name="dataSource" ref="dataSource" />
+        <property name="configLocation" value="classpath:hibernate.cfg.xml"></property>
+        &lt;!&ndash; //加载实体类的映射文件位置及名称 &ndash;&gt;
+        <property name="mappingLocations" value="classpath:com/demo/ssm/po/*.hbm.xml"></property>
+    </bean>-->
+       <bean id="sessionFactory"
+             class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+           <property name="dataSource">
+               <ref bean="dataSource" />
+           </property>
+           <!-- 相当于hibernate.cfg.xml配置的信息 -->
+           <property name="hibernateProperties">
+               <props>
+
+                   <!-- <prop key="hibernate.current_session_context_class">thread</prop> -->
+                   <prop key="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</prop>
+                   <!--显示sql语句 -->
+                   <prop key="show_sql">true</prop>
+                   <!-- 格式化sql语句 -->
+                   <prop key="hibernate.format_sql">true</prop>
+                   <!-- 自动建表 -->
+                   <prop key="hbm2ddl.auto">update</prop>
+                   <!--连接池的最大活动个数    -->
+                   <prop key="hibernate.dbcp.maxActive">100 </prop>
+                   <!-- 当连接池中的连接已经被耗尽的时候，DBCP将怎样处理(0 = 失败,1 = 等待,2  =  增长)    -->
+                   <prop key="hibernate.dbcp.whenExhaustedAction">1 </prop>
+                   <!-- 最大等待时间    -->
+                   <prop key="hibernate.dbcp.maxWait">1200</prop>
+                    <!-- 没有人用连接的时候，最大闲置的连接个数     -->
+                   <prop key="hibernate.dbcp.maxIdle">10 </prop>
+       </props>
+
+   </property>
+ <!--  <property name="mappingLocations">
+       <list>
+           <value>classpath:</value>
+       </list>
+   </property>-->
+           <!-- 包扫描的方式加载注解类(推荐) -->
+           <property name="packagesToScan">
+               <list>
+                   <value>com.jarby.user.domain</value>
+               </list>
+           </property>
+       </bean>
+    <bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+    <!--   <bean id="sessionFactory"
+             class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+           <property name="dataSource" ref="dataSource"></property>
+           &lt;!&ndash; 相当于hibernate.cfg.xml配置的信息 &ndash;&gt;
+           <property name="hibernateProperties">
+               <props>
+                   &lt;!&ndash; <prop key="hibernate.current_session_context_class">thread</prop> &ndash;&gt;
+                   <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+                   &lt;!&ndash;显示sql语句 &ndash;&gt;
+                   <prop key="show_sql">true</prop>
+                   &lt;!&ndash; 格式化sql语句 &ndash;&gt;
+                   <prop key="hibernate.format_sql">true</prop>
+                   &lt;!&ndash; 自动建表 &ndash;&gt;
+                   <prop key="hbm2ddl.auto">update</prop>
+               </props>
+           </property>
+           <property name="packagesToScan">
+               <list>
+                   <value>com.jarby.user.*</value>&lt;!&ndash; 加载hibernate的jpa注解形式的实体类 &ndash;&gt;
+               </list>
+           </property>
+       </bean>-->
+    <!--JDBC事务管理器,根据你的情况使用不同的事务管理器,如果工程中有Hibernate,就用Hibernate的事务管理器 -->
+</beans>
